@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CronTab</title>
+    <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div>
+                    <h1>管理后台<small>Golang分布式Crontab</small></h1>
+                </div>
+            </div>
+        </div>
+        <!-- 功能按钮 -->
+        <div class="row">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-primary" id="new-job">新建任务</button>
+            </div>
+        </div>
+
+        <!-- 任务列表 -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default" style="margin-top: 20px">
+                    <div class="panel-body">
+                        <table id="job-list" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>任务名称</th>
+                                    <th>shell命令</th>
+                                    <th>cron表达式</th>
+                                    <th>任务操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="edit-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">编辑任务</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="">
+                        <div class="form-group">
+                            <label for="edit-name">任务名称</label>
+                            <input type="text" class="form-control" id="edit-name" disabled placeholder="任务名称">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-command">shell命令</label>
+                            <input type="text" class="form-control" id="edit-command" placeholder="shell命令">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-cron-expr">cron表达式</label>
+                            <input type="text" class="form-control" id="edit-cron-expr" placeholder="cron表达式">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="save-job">保存任务</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            let $jobList = $("#job-list");
+            $jobList.on("click", ".edit-job", function () {
+                //获取信息赋值
+                $('#edit-name').val($(this).parents('tr').children('.job-name').text())
+                $('#edit-command').val($(this).parents('tr').children('.job-command').text())
+                $('#edit-cron-expr').val($(this).parents('tr').children('.job-cronexpr').text())
+
+                $('#edit-modal').modal('show')
+            });
+
+            $jobList.on("click", ".delete-job", function () {
+                let jobName = $(this).parents("tr").children(".job-name").text()
+                $.ajax({
+                    url: '/job/delete',
+                    type: 'post',
+                    dataType: 'json',
+                    data: { name: jobName },
+                    complete: function () {
+                        window.location.reload()
+                    }
+                })
+
+            });
+
+            $jobList.on("click", ".kill-job", function () {
+                let jobName = $(this).parents("tr").children(".job-name").text()
+                $.ajax({
+                    url: '/job/kill',
+                    type: 'post',
+                    dataType: 'json',
+                    data: { name: jobName },
+                    complete: function () {
+                        window.location.reload()
+                    }
+                })
+            });
+
+            // 保存任务
+            $('#save-job').on('click', function () {
+                let jobInfo = {
+                    name: $('#edit-name').val(),
+                    command: $('#edit-command').val(),
+                    cron_expr: $('#edit-cron-expr').val(),
+                };
+
+                $.ajax({
+                    url: '/job/save',
+                    type: 'post',
+                    dataType: 'json',
+                    data: {job: JSON.stringify(jobInfo)},
+                    complete: function () {
+                        window.location.reload()
+                    }
+                })
+            });
+
+            //新建任务
+            $('#new-job').on('click', function () {
+                $('#edit-name').attr('disabled', false).val();
+                $('#edit-command').val();
+                $('#edit-cron-expr').val();
+                $('#edit-modal').modal('show');
+            });
+
+
+            // 刷新任务列表
+            function rebuildJobList() {
+                $.ajax({
+                    url: "/job/list",
+                    dataType: "json",
+                    success: function (resp) {
+                        if (resp.errno !== 0) {
+                            return
+                        }
+
+                        var jobList = resp.data
+
+                        // 清理列表
+                        $('#job-list tbody').empty();
+                        for (let index = 0; index < jobList.length; index++) {
+                            let job = jobList[index];
+                            let tr = $("<tr>");
+                            tr.append($('<td class="job-name">').html(job.name))
+                            tr.append($('<td class="job-command">').html(job.command))
+                            tr.append($('<td class="job-cronexpr">').html(job.cron_expr))
+
+                            let toolbar = $('<div class="btn-toolbar">')
+                                .append(' <button type="button" class="btn btn-info edit-job">编辑</button>')
+                                .append(' <button type="button" class="btn btn-danger delete-job">删除</button>')
+                                .append(' <button type="button" class="btn btn-warning kill-job">强杀</button>');
+
+                            tr.append($('<td>').append(toolbar));
+
+                            $("#job-list tbody").append(tr)
+                        }
+                    }
+                })
+            }
+
+            rebuildJobList();
+        })
+    </script>
+</body>
+
+</html>

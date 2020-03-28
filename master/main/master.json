@@ -1,0 +1,8 @@
+{
+  "api_port": 8070,
+  "api_read_timeout": 5000,
+  "api_write_timeout": 5000,
+  "etcd_end_points": ["0.0.0.0:2379"],
+  "etcd_dial_timeout" : 5000,
+  "web_root": "webroot"
+}
