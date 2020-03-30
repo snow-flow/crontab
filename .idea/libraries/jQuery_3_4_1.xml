@@ -1,0 +1,20 @@
+<component name="libraryTable">
+  <library name="jQuery 3.4.1" type="javaScript">
+    <properties>
+      <option name="frameworkName" value="jQuery" />
+      <option name="frameworkVersion" value="3.4.1" />
+      <sourceFilesUrls>
+        <item url="file://$USER_HOME$/Develop/front_data/jquery.js" />
+      </sourceFilesUrls>
+    </properties>
+    <CLASSES>
+      <root url="file://$USER_HOME$/Develop/front_data/jquery.js" />
+    </CLASSES>
+    <DOCUMENTATION>
+      <root url="file://$APPLICATION_CONFIG_DIR$/javascript/extLibs/http_api.jquery.com_resources_api.xml.xml" />
+      <root url="http://api.jquery.com" />
+    </DOCUMENTATION>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

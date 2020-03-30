@@ -8,6 +8,7 @@ import (
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/snow-flow/crontab/common"
 	"github.com/snow-flow/crontab/worker/config"
+	"github.com/snow-flow/crontab/worker/scheduler"
 
 	"github.com/coreos/etcd/clientv3"
 )
@@ -75,7 +76,8 @@ func (m *JobMgr) watchJobs() (err error) {
 		}
 		jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
 		fmt.Printf("%v", *jobEvent)
-		// 	TODO: 把这个job同步给scheduler（调度协程）
+		// 把这个job同步给scheduler（调度协程）
+		scheduler.G_scheduler.PushJobEvent(jobEvent)
 	}
 
 	// 	2. 从该revision向后监听变化事件
@@ -104,10 +106,10 @@ func (m *JobMgr) watchJobs() (err error) {
 					job := &common.Job{Name: jobName}
 					jobEvent = common.BuildJobEvent(common.JOB_EVENT_DELETE, job)
 
-					// TODO: 推送删除事件给scheduler
-
 				}
 				fmt.Println(*jobEvent)
+				//  推送删除更新事件给scheduler
+				scheduler.G_scheduler.PushJobEvent(jobEvent)
 			}
 		}
 	}()

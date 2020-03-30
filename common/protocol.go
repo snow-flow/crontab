@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -32,7 +33,7 @@ type Response struct {
 // 变化事件
 type JobEvent struct {
 	EventType int // save, delete
-	job       *Job
+	Job       *Job
 }
 
 // 应答方法
@@ -67,6 +68,22 @@ func ExtractJobName(jobkey string) string {
 func BuildJobEvent(eventType int, job *Job) (jobEvent *JobEvent) {
 	return &JobEvent{
 		EventType: eventType,
-		job:       job,
+		Job:       job,
+	}
+}
+
+// 构造任务执行计划
+func BuildJobSchedulePlan(job *Job) (jobSchedulePlan *JobSchedulePlan) {
+	expression, err := cronexpr.Parse(job.CronExpr)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	// 	生成任务调度计划对象
+	return &JobSchedulePlan{
+		Job:      job,
+		Expr:     expression,
+		NextTime: expression.Next(time.Now()),
 	}
 }
