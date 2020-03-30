@@ -3,6 +3,9 @@ package common
 import (
 	"encoding/json"
 	"strings"
+	"time"
+
+	"github.com/gorhill/cronexpr"
 )
 
 // 定时任务
@@ -10,6 +13,13 @@ type Job struct {
 	Name     string `json:"name"`      // 任务名
 	Command  string `json:"command"`   // shell命令
 	CronExpr string `json:"cron_expr"` // cron表达式
+}
+
+// 任务调度计划
+type JobSchedulePlan struct {
+	Job      *Job                 // 要调度的任务信息
+	Expr     *cronexpr.Expression // 解析好的cronexpr表达式
+	NextTime time.Time            // 下次调度时间
 }
 
 // HTTP接口应答
