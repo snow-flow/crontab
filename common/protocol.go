@@ -59,7 +59,7 @@ func UnpackJob(value []byte) (ret *Job, err error) {
 	return job, nil
 }
 
-// 从ETCD的key中提取任务名
+// 从 etcd 的key中提取任务名
 func ExtractJobName(jobkey string) string {
 	return strings.TrimPrefix(jobkey, JOB_SAVE_DIR)
 }

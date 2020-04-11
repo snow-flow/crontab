@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/snow-flow/crontab/worker/manager"
-
 	"github.com/snow-flow/crontab/worker/config"
+	"github.com/snow-flow/crontab/worker/manager"
+	"github.com/snow-flow/crontab/worker/scheduler"
 )
 
 // 配置文件路径
@@ -23,6 +23,13 @@ func main() {
 	initArgs()
 	// 加载配置
 	err := config.InitConfig(confFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// 启动调度器
+	err = scheduler.InitScheduler()
 	if err != nil {
 		fmt.Println(err)
 		return
