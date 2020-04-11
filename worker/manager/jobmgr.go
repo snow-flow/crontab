@@ -31,7 +31,6 @@ func InitJobMgr() (err error) {
 		DialTimeout: time.Duration(config.G_config.EtcdDialTimeout) * time.Microsecond,
 	}
 
-	// 	建立客户端
 	client, err := clientv3.New(conf)
 	if err != nil {
 		fmt.Println(err)
@@ -107,7 +106,7 @@ func (m *JobMgr) watchJobs() (err error) {
 					jobEvent = common.BuildJobEvent(common.JOB_EVENT_DELETE, job)
 
 				}
-				fmt.Println(*jobEvent)
+				// fmt.Println(*jobEvent)
 				//  推送删除更新事件给scheduler
 				scheduler.G_scheduler.PushJobEvent(jobEvent)
 			}

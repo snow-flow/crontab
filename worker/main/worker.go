@@ -28,6 +28,13 @@ func main() {
 		return
 	}
 
+	// 启动执行器
+	err = scheduler.InitExecutor()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// 启动调度器
 	err = scheduler.InitScheduler()
 	if err != nil {
@@ -41,12 +48,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
-	// 	启动 API HTTP 服务
-	// err = server.InitApiServer()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
 
 	for {
 		time.Sleep(1 * time.Second)
