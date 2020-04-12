@@ -83,8 +83,67 @@
             </div>
         </div>
     </div>
+    <!-- 日志模态框-->
+    <div class="modal fade " id="log-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">任务日志</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table id="log-list" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>shell命令</th>
+                            <th>错误原因</th>
+                            <th>脚本输出</th>
+                            <th>计划开始时间</th>
+                            <th>实际调度时间</th>
+                            <th>开始执行时间</th>
+                            <th>执行结束时间</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         $(document).ready(function () {
+            //日期格式化函数
+            function timeFormat(millisecond) {
+                function paddingNum(num, n) {
+                    var len = num.toString().length
+                    while (len < n) {
+                        num = '0' + num
+                        len++
+                    }
+                    return num
+                }
+
+                var date = new Date(millisecond)
+                var year = date.getFullYear()
+                var month = paddingNum(date.getMonth()+1, 2)
+                var day = paddingNum(date.getDate(), 2)
+                var hour = paddingNum(date.getHours(), 2)
+                var minute = paddingNum(date.getMinutes(), 2)
+                var second = paddingNum(date.getSeconds(), 2)
+                var mill = paddingNum(date.getMilliseconds(), 3)
+
+                return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second + "." + mill
+            }
+
+
             let $jobList = $("#job-list");
             $jobList.on("click", ".edit-job", function () {
                 //获取信息赋值
@@ -149,6 +208,38 @@
                 $('#edit-modal').modal('show');
             });
 
+            //查看任务列表
+            $jobList.on("click", ".log-job", function () {
+                var jobName = $(this).parents('tr').children('.job-name').text()
+                $('#log-list tbody').empty()
+                $.ajax({
+                    url: "/job/log",
+                    dataType: "json",
+                    data: {name: jobName},
+                    success: function (resp) {
+                        if (resp.errno != 0) {
+                            return
+                        }
+                        var logList = resp.data
+                        for (var i = 0; i < logList.length; i++) {
+                            var log = logList[i]
+                            var tr = $('<tr>')
+                            tr.append($('<td>').html(log.command))
+                            tr.append($('<td>').html(log.err))
+                            tr.append($('<td>').html(log.output))
+                            tr.append($('<td>').html(timeFormat(log.plan_time)))
+                            tr.append($('<td>').html(timeFormat(log.schedule_time)))
+                            tr.append($('<td>').html(timeFormat(log.start_time)))
+                            tr.append($('<td>').html(timeFormat(log.end_time)))
+                            $('#log-list tbody').append(tr)
+                        }
+
+                    }
+                })
+
+                $('#log-modal').modal('show')
+            });
+
 
             // 刷新任务列表
             function rebuildJobList() {
@@ -174,7 +265,8 @@
                             let toolbar = $('<div class="btn-toolbar">')
                                 .append(' <button type="button" class="btn btn-info edit-job">编辑</button>')
                                 .append(' <button type="button" class="btn btn-danger delete-job">删除</button>')
-                                .append(' <button type="button" class="btn btn-warning kill-job">强杀</button>');
+                                .append(' <button type="button" class="btn btn-warning kill-job">强杀</button>')
+                                .append(' <button type="button" class="btn btn-success log-job">日志</button>');
 
                             tr.append($('<td>').append(toolbar));
 

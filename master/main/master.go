@@ -30,6 +30,13 @@ func main() {
 		return
 	}
 
+	// 日志管理器
+	err = manager.InitLogMgr()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// 任务管理器
 	err = manager.InitJobMgr()
 	if err != nil {

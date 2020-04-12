@@ -27,6 +27,13 @@ func main() {
 		return
 	}
 
+	// 服务注册
+	err = manager.InitRegister()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// 启动日志协程
 	err = manager.InitLogSink()
 	if err != nil {

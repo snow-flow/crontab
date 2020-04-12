@@ -137,6 +137,37 @@ func handleJobKill(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// 查询任务日志
+func handleJobLog(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// /job/log?name=job1&skip=0&limit=10
+	name := r.Form.Get("name")
+	skip, _ := strconv.Atoi(r.Form.Get("skip"))
+	limit, _ := strconv.Atoi(r.Form.Get("limit"))
+
+	listLog, err := manager.G_logMgr.ListLog(name, skip, limit)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// 正常应答
+	response, err := common.BuildResponse(0, "success", listLog)
+	if err == nil {
+		w.Write(response)
+		return
+	}
+
+	resp, _ := common.BuildResponse(-1, err.Error(), nil)
+	w.Write(resp)
+
+}
+
 // 初始化服务
 func InitApiServer() (err error) {
 	// 	配置路由
@@ -145,6 +176,7 @@ func InitApiServer() (err error) {
 	mux.HandleFunc("/job/delete", handleJobDelete)
 	mux.HandleFunc("/job/list", handleJobList)
 	mux.HandleFunc("/job/kill", handleJobKill)
+	mux.HandleFunc("/job/log", handleJobLog)
 
 	// /index.html
 	// 静态文件目录
