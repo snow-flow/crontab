@@ -115,6 +115,11 @@ func ExtractKillerName(killerkey string) string {
 	return strings.TrimPrefix(killerkey, JOB_KILLER_DIR)
 }
 
+// 提取worker的IP
+func ExtractWorkerIP(regKey string) string {
+	return strings.TrimPrefix(regKey, JOB_WORKER_DIR)
+}
+
 // 任务变化事件有两种：1）更新任务 2）删除任务
 func BuildJobEvent(eventType int, job *Job) (jobEvent *JobEvent) {
 	return &JobEvent{

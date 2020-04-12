@@ -30,6 +30,13 @@ func main() {
 		return
 	}
 
+	// 初始化集群管理器
+	err = manager.InitWorkerMgr()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// 日志管理器
 	err = manager.InitLogMgr()
 	if err != nil {

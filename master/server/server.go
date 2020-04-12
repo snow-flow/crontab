@@ -168,6 +168,25 @@ func handleJobLog(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// 获取健康worker节点列表
+func handleWorkerList(w http.ResponseWriter, r *http.Request) {
+	workers, err := manager.G_workerMgr.ListWorkers()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// 正常应答
+	response, err := common.BuildResponse(0, "success", workers)
+	if err == nil {
+		w.Write(response)
+		return
+	}
+
+	resp, _ := common.BuildResponse(-1, err.Error(), nil)
+	w.Write(resp)
+}
+
 // 初始化服务
 func InitApiServer() (err error) {
 	// 	配置路由
@@ -177,6 +196,7 @@ func InitApiServer() (err error) {
 	mux.HandleFunc("/job/list", handleJobList)
 	mux.HandleFunc("/job/kill", handleJobKill)
 	mux.HandleFunc("/job/log", handleJobLog)
+	mux.HandleFunc("/worker/list", handleWorkerList)
 
 	// /index.html
 	// 静态文件目录
