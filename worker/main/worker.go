@@ -7,7 +7,6 @@ import (
 
 	"github.com/snow-flow/crontab/worker/config"
 	"github.com/snow-flow/crontab/worker/manager"
-	"github.com/snow-flow/crontab/worker/scheduler"
 )
 
 // 配置文件路径
@@ -29,14 +28,14 @@ func main() {
 	}
 
 	// 启动执行器
-	err = scheduler.InitExecutor()
+	err = manager.InitExecutor()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	// 启动调度器
-	err = scheduler.InitScheduler()
+	err = manager.InitScheduler()
 	if err != nil {
 		fmt.Println(err)
 		return

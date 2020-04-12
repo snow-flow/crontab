@@ -1,4 +1,4 @@
-package scheduler
+package manager
 
 import (
 	"fmt"
@@ -49,7 +49,7 @@ func (scheduler *Scheduler) TryStartJob(jobPlan *common.JobSchedulePlan) {
 	scheduler.jobExecutingTable[jobPlan.Job.Name] = jobExecuteInfo
 
 	// 执行任务
-	fmt.Println("执行任务：", jobExecuteInfo.Job.Name, jobExecuteInfo.PlanTime, jobExecuteInfo.RealTime)
+	fmt.Println("执行任务中：", jobExecuteInfo.Job.Name, jobExecuteInfo.PlanTime, jobExecuteInfo.RealTime)
 	G_executor.ExecuteJob(jobExecuteInfo)
 }
 
@@ -67,8 +67,7 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 	// 1. 遍历所有任务
 	for _, schedulePlan := range scheduler.jobPlanTable {
 		if schedulePlan.NextTime.Before(now) || schedulePlan.NextTime.Equal(now) {
-			// 	 TODO: 尝试执行任务
-			fmt.Println("执行任务：", schedulePlan.Job.Name)
+			fmt.Println("执行任务开始：", schedulePlan.Job.Name)
 			scheduler.TryStartJob(schedulePlan)
 			schedulePlan.NextTime = schedulePlan.Expr.Next(now) // 更新下次执行时间
 		}
@@ -86,7 +85,7 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 // 处理任务结果
 func (scheduler Scheduler) handleJobResult(result *common.JobExecuteResult) {
 	delete(scheduler.jobExecutingTable, result.ExecuteInfo.Job.Name)
-	fmt.Println("任务执行完成：", result.ExecuteInfo.Job.Name, string(result.Output), result.Err)
+	fmt.Println("任务执行完成：", result.ExecuteInfo.Job.Name, string(result.Output))
 }
 
 // 调度协程

@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/snow-flow/crontab/common"
 	"github.com/snow-flow/crontab/worker/config"
-	"github.com/snow-flow/crontab/worker/scheduler"
-
-	"github.com/coreos/etcd/clientv3"
 )
 
 // 任务管理器
@@ -58,7 +56,7 @@ func InitJobMgr() (err error) {
 
 // 监听任务变化
 func (m *JobMgr) watchJobs() (err error) {
-	fmt.Println("----watching jobs")
+	fmt.Println("========== 开始监听任务变化 =========")
 	var jobEvent *common.JobEvent
 	// 	1. get一下/cron/jobs/目录下的所有任务，并且获知当前集群的revision
 	getResponse, err := m.kv.Get(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithPrefix())
@@ -74,9 +72,8 @@ func (m *JobMgr) watchJobs() (err error) {
 			return err
 		}
 		jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
-		fmt.Printf("%v", *jobEvent)
 		// 把这个job同步给scheduler（调度协程）
-		scheduler.G_scheduler.PushJobEvent(jobEvent)
+		G_scheduler.PushJobEvent(jobEvent)
 	}
 
 	// 	2. 从该revision向后监听变化事件
@@ -108,10 +105,16 @@ func (m *JobMgr) watchJobs() (err error) {
 				}
 				// fmt.Println(*jobEvent)
 				//  推送删除更新事件给scheduler
-				scheduler.G_scheduler.PushJobEvent(jobEvent)
+				G_scheduler.PushJobEvent(jobEvent)
 			}
 		}
 	}()
 
 	return nil
+}
+
+// 创建任务执行锁
+func (m JobMgr) CreatJobLock(jobName string) (jobLock *JobLock) {
+	// 返回一把锁
+	return InitJobLock(jobName, m.kv, m.lease)
 }

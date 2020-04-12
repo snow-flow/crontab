@@ -1,4 +1,4 @@
-package scheduler
+package manager
 
 import (
 	"context"
@@ -23,22 +23,37 @@ func (executor *Executor) ExecuteJob(info *common.JobExecuteInfo) {
 			Output:      make([]byte, 0),
 		}
 
+		// 首先获取分布式锁
+		jobLock := G_jobMgr.CreatJobLock(info.Job.Name)
+
 		// 记录任务开始时间
 		result.StartTime = time.Now()
 
-		// 	执行shell命令
-		cmd := exec.CommandContext(context.TODO(), "/bin/bash", "-c", info.Job.Command)
+		err := jobLock.TryLock()
+		defer jobLock.UnLock()
 
-		// 	执行并捕获输出
-		output, err := cmd.CombinedOutput()
+		if err != nil {
+			result.Err = err
+			result.EndTime = time.Now()
+		} else {
+			// 上锁成功后，重置任务启动时间
+			result.StartTime = time.Now()
 
-		// 记录任务结束时间
-		result.EndTime = time.Now()
-		result.Output = output
-		result.Err = err
+			// 	执行shell命令
+			cmd := exec.CommandContext(context.TODO(), "/bin/bash", "-c", info.Job.Command)
+
+			// 	执行并捕获输出
+			output, err := cmd.CombinedOutput()
+
+			// 记录任务结束时间
+			result.EndTime = time.Now()
+			result.Output = output
+			result.Err = err
+		}
 
 		// 	任务执行完成后，把执行的结果返回给Scheduler, Scheduler会从executingTable中删除掉执行记录
 		G_scheduler.PushJobResult(result)
+
 	}()
 
 }
