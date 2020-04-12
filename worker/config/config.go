@@ -7,8 +7,10 @@ import (
 
 // 程序配置
 type Config struct {
-	EtcdEndPoints   []string `json:"etcd_end_points"`
-	EtcdDialTimeout int      `json:"etcd_dial_timeout"`
+	EtcdEndPoints       []string `json:"etcd_end_points"`
+	EtcdDialTimeout     int      `json:"etcd_dial_timeout"`
+	JobLogBatchSize     int      `json:"job_log_batch_size"`
+	JobLogCommitTimeout int      `json:"job_log_commit_timeout"`
 }
 
 var G_config *Config

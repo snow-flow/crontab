@@ -4,5 +4,7 @@
   "api_write_timeout": 5000,
   "etcd_end_points": ["0.0.0.0:2379"],
   "etcd_dial_timeout" : 5000,
-  "web_root": "webroot"
+  "web_root": "webroot",
+  "job_log_batch_size": 100,
+  "job_log_commit_timeout": 1000
 }

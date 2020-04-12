@@ -27,6 +27,13 @@ func main() {
 		return
 	}
 
+	// 启动日志协程
+	err = manager.InitLogSink()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// 启动执行器
 	err = manager.InitExecutor()
 	if err != nil {

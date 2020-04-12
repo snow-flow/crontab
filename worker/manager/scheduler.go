@@ -27,6 +27,13 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 		if _, jobExisted := scheduler.jobPlanTable[jobEvent.Job.Name]; jobExisted {
 			delete(scheduler.jobPlanTable, jobEvent.Job.Name)
 		}
+	case common.JOB_EVENT_KILL: // 强杀任务事件
+		// 	取消掉Command执行，判断任务是否执行中
+		if jobExecuteInfo, jobExecuting := scheduler.jobExecutingTable[jobEvent.Job.Name]; jobExecuting {
+			fmt.Println("杀死进程执行完毕" + jobEvent.Job.Name)
+			jobExecuteInfo.CancelFunc() // 触发command杀死shell子进程，任务得到退出
+		}
+
 	}
 }
 
@@ -38,7 +45,7 @@ func (scheduler *Scheduler) TryStartJob(jobPlan *common.JobSchedulePlan) {
 
 	// 执行的任务可能运行很久，1分钟调度60次，但是只能执行一次，防止并发
 	if jobExecuteInfo, jobExecuting = scheduler.jobExecutingTable[jobPlan.Job.Name]; jobExecuting {
-		fmt.Println("尚未退出，跳过执行：", jobPlan.Job.Name)
+		fmt.Println("任务尚未退出，跳过执行：" + jobPlan.Job.Name)
 		return
 	}
 
@@ -49,7 +56,7 @@ func (scheduler *Scheduler) TryStartJob(jobPlan *common.JobSchedulePlan) {
 	scheduler.jobExecutingTable[jobPlan.Job.Name] = jobExecuteInfo
 
 	// 执行任务
-	fmt.Println("执行任务中：", jobExecuteInfo.Job.Name, jobExecuteInfo.PlanTime, jobExecuteInfo.RealTime)
+	// fmt.Println("执行任务中：", jobExecuteInfo.Job.Name, jobExecuteInfo.PlanTime, jobExecuteInfo.RealTime)
 	G_executor.ExecuteJob(jobExecuteInfo)
 }
 
@@ -85,7 +92,29 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 // 处理任务结果
 func (scheduler Scheduler) handleJobResult(result *common.JobExecuteResult) {
 	delete(scheduler.jobExecutingTable, result.ExecuteInfo.Job.Name)
-	fmt.Println("任务执行完成：", result.ExecuteInfo.Job.Name, string(result.Output))
+
+	// 生成执行日志
+	var jobLog *common.JobLog
+	if result.Err != common.ERR_LOCK_ALREADY_REQUIRED {
+		jobLog = &common.JobLog{
+			JobName:      result.ExecuteInfo.Job.Name,
+			Command:      result.ExecuteInfo.Job.Command,
+			Output:       string(result.Output),
+			Err:          "",
+			PlanTime:     result.ExecuteInfo.PlanTime.UnixNano() / 1000 / 1000,
+			ScheduleTime: result.ExecuteInfo.RealTime.UnixNano() / 1000 / 1000,
+			StartTime:    result.StartTime.UnixNano() / 1000 / 1000,
+			EndTime:      result.EndTime.UnixNano() / 1000 / 1000,
+		}
+	}
+
+	if result.Err != nil {
+		jobLog.Err = result.Err.Error()
+	}
+
+	// TODO: 存储到mongodb
+	G_logSink.Append(jobLog)
+	fmt.Println("任务执行完成：", result.ExecuteInfo.Job.Name, string(result.Output), result.Err)
 }
 
 // 调度协程
